@@ -13,14 +13,4 @@ VASP
    eigenvalSileVASP
    chgSileVASP
    locpotSileVASP
-   outSileVASP
-
-
-.. autosummary::
-   :toctree: generated/
-   :hidden:
-
-   SileVASP
-   SileCDFVASP
-   SileBinVASP
-
+   outcarSileVASP

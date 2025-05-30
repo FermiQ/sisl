@@ -3,7 +3,7 @@ Deployment of sisl
 ==================
 
 This document describes the deployment details to perform
-an version release (or development release).
+a version release (or development release).
 
 
 Version release
@@ -16,48 +16,54 @@ below sequence.
 
 The release cycle should be performed like this:
 
-1. Increment the release numbers in the top-directory
-   setup.py script
-   These are
+1. Update released versions in `CITATION.cff` and `pyproject.toml`.
 
-		MAJOR
-		MINOR
-		MICRO
+2. Insert correct dates in `CITATION.cff` (for Zenodo).
 
-	Alltogether the version number _is_:
-	`VERSION=MAJOR.MINOR.MICRO`
-	In the following `VERSION` should be replaced by the correct release
-	numbers
-	
-2. Set the variable:
+3. Create release notes and changelogs:
 
-	    ISRELEASED = True
+   1. Create the release-notes for the documentation:
 
-3. Set the variable `GIT_REVISION` to the latest commit.
-   This means that the revision specification for the release
-   actually corresponds to the commit just before the actual release.
-   You can get the commit hash by:
+      ```shell
+      towncrier build --version 0.14.1 --yes
+      ```
 
-        git rev-parse HEAD
+      This will create a file here: `docs/release/0.14.1-notes.rst`.
 
-        GIT_REVISION = <git rev-parse HEAD>
+      Amend to `docs/release.rst` something like this:
 
-4. Add `setup.py` to the commit and commit using:
+         0.14.1 <release/0.14.1-notes.rst>
 
-    	git commit -s -m "sisl release: VERSION"
+   2. Create simpler release notes (for Github):
 
-   with the corresponding version number.
+      ```shell
+      # append to towncrier release notes:
+      python tools/changelog.py --format rst $GH_TOKEN v0.14.0..v0.14.1 >> docs/release/0.14.1-notes.rst
+      python tools/changelog.py --format md $GH_TOKEN v0.14.0..v0.14.1 > changelog.md
+      ```
+
+4. Commit changes.
 
 5. Tag the commit with:
 
-		git tag -a "vVERSION" -m "Releasing vVERSION"
+       git tag -a "vVERSION" -m "Releasing vVERSION"
 
 6. Create tarballs and wheels and upload them
 
-		rm -rf dist
-		python setup.py sdist bdist_wheel
-		twine upload dist/sisl-VERSION*.tar.gz
-		twine upload dist/sisl-VERSION*.whl
+   These steps should be done via the github actions step, so generally
+   not required.
+
+       python3 -m pip install --upgrade build
+       python3 -m build
+       python3 -m pip install --upgrade twine
+       # requires .pypirc with testpypi section
+       python3 -m twine upload --repository testpypi dist/*
+
+       # test installation, preferably in a venv
+       python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ sisl
+
+       # once checked, upload to pypi
+       python3 -m twine upload dist/sisl-0.12.0.tar.gz
 
 7. Create conda uploads.
 
@@ -65,7 +71,22 @@ The release cycle should be performed like this:
    sisl-feedstock is used. To update it, follow these steps:
 
    1. branch off https://github.com/conda-forge/sisl-feedstock
-   2. Edit recipe/meta.yaml by updating version and sha256
+   2. Edit `recipe/meta.yaml` by updating version and sha256
    3. Propose merge-request.
    4. Check CI succeeds.
    5. Accept merge and the new version will be uploaded.
+
+8. Update pyodide version
+
+   Until web assembly (wasm) wheels are supported by PyPi, they
+   are managed directly in the pyodide repository. The update steps
+   are very similar to conda, except all packages are managed
+   in a single repository. The meta.yaml is at `packages/sisl/meta.yaml`.
+   Follow these steps:
+
+   1. branch off https://github.com/pyodide/pyodide
+   2. Edit `packages/sisl/meta.yaml` by updating version, source url and sha256
+   3. Propose merge-request.
+   4. Check CI succeeds. If it doesn't you can test locally by following
+      instructions [here](https://pyodide.org/en/stable/development/new-packages.html#building-a-python-package-in-tree)
+   5. Wait for the pyodide team to accept your request.

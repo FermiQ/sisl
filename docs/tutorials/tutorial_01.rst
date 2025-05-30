@@ -11,13 +11,13 @@ The *only* required information is the atomic coordinates::
    >>> print(single_hydrogen)
    {na: 1, no: 1, species:
     {Atoms(1):
-       (1) == [H, Z: 1, orbs: 1, mass(au): 1.00794, maxR: -1.00000], 
+       (1) == [H, Z: 1, orbs: 1, mass(au): 1.00794, maxR: -1.00000],
     },
     nsc: [1, 1, 1], maxR: -1.0
    }
 
 this will create a `Geometry` object with 1 Hydrogen atom with a single orbital
-(default if not specified), and a supercell of 10 A in each Cartesian direction.
+(default if not specified), and a lattice of 10 A in each Cartesian direction.
 When printing a `Geometry` object a list of information is printed in an
 XML-like fashion. ``na`` corresponds to the total number of atoms in the
 geometry, while ``no`` refers to the total number of orbitals.
@@ -34,8 +34,8 @@ To specify the atomic specie one may do::
 
    >>> single_carbon = Geometry([[0., 0., 0.]], Atom('C'))
 
-which changes the Hydrogen to a Carbon atom. See <link to atom_01.rst> on how to create different atoms.
-   
+which changes the Hydrogen to a Carbon atom.
+
 To create a geometry with two different atomic species, for instance a chain
 of alternating Natrium an Chloride atoms, separated by 1.6 A one may do::
 
@@ -57,5 +57,4 @@ which is twice the length of the first chain with alternating Natrium and Chlori
 but otherwise identical.
 
 This is the most basic form of creating geometries in sisl and is the starting
-point of almost anything related to sisl. 
-
+point of almost anything related to sisl.

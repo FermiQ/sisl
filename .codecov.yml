@@ -3,14 +3,13 @@ ignore:
   - data
   - developments
 
+codecov:
+  notify:
+    after_n_builds: 6
+
 coverage:
   status:
     project:
       default:
         target: auto
-	base: auto
-  notify:
-    gitter:
-      default:
-        url: https://webhooks.gitter.im/e/96584a4ebaea0c936db7
-        threshold: 1%
+        base: auto

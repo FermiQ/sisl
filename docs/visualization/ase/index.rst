@@ -1,3 +1,5 @@
+:orphan:
+
 ASE
 ---
 
@@ -5,12 +7,12 @@ A sisl `Geometry` object may easily be converted to ASE objects and thus directl
 plotted.
 
 
-.. code::
+.. code-block::
 
-   import sisl
-   import ase.visualize.view as view
+   import sisl as si
+   from ase.visualize import view
 
-   geom = sisl.geom.graphene()
+   geom = si.geom.graphene()
    view(geom.to.ase())
 
 will open a new window showing the atoms.

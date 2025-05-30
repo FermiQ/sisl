@@ -8,8 +8,9 @@ Siesta
 .. autosummary::
    :toctree: generated/
 
+   aniSileSiesta - ANI file
    fdfSileSiesta - input file
-   outSileSiesta - output file
+   stdoutSileSiesta - output file
    xvSileSiesta - xyz and vxyz file
    bandsSileSiesta - band structure information
    eigSileSiesta - EIG file
@@ -28,6 +29,8 @@ Siesta
    fcSileSiesta - Force constant matrix
    kpSileSiesta - k-points from simulation
    rkpSileSiesta - k-points to simulation
+   structSileSiesta - geometry in STRUCT_* files
+   timesSileSiesta - timings from siesta
 
 
 TranSiesta
@@ -40,43 +43,3 @@ TranSiesta
    tsdeSileSiesta - TranSiesta (energy) density matrix
    tsgfSileSiesta - TranSiesta surface Green function files
    tsvncSileSiesta - TranSiesta specific Hartree potential file
-
-
-TBtrans
-=======
-
-.. module:: sisl.io.tbtrans
-
-.. autosummary::
-   :toctree: generated/
-
-   tbtncSileTBtrans
-   deltancSileTBtrans
-   tbtgfSileTBtrans - TBtrans surface Green function files
-   tbtsencSileTBtrans
-   tbtavncSileTBtrans
-   tbtprojncSileTBtrans
-
-`TBtrans`_ is per default a ballistic electron transport utility. It may also
-be compiled in a ballistic phonon transport mode, named ``PHtrans``.
-
-.. autosummary::
-   :toctree: generated/
-
-   phtncSilePHtrans
-   phtsencSilePHtrans
-   phtavncSilePHtrans
-   phtprojncSilePHtrans
-
-   
-.. autosummary::
-   :toctree: generated/
-   :hidden:
-
-   ~sisl.io.siesta.SileSiesta
-   ~sisl.io.siesta.SileCDFSiesta
-   ~sisl.io.siesta.SileBinSiesta
-   SileTBtrans
-   SileCDFTBtrans
-   SileBinTBtrans
-

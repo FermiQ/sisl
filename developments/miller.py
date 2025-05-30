@@ -1,5 +1,12 @@
-import numpy as np
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+from __future__ import annotations
+
 from fractions import gcd
+
+import numpy as np
+
 import sisl as si
 
 ortho = si.utils.math.orthogonalize
@@ -55,13 +62,13 @@ def get_miller(rcell, hkl):
     r0, t0, p0 = si.utils.math.cart2spher(v0)
     # Create a rotation matrix that rotates the first vector to be along the
     # first lattice.
-    q0 = si.Quaternion(-p0, [0, 0, 1.], True)
-    q1 = si.Quaternion(-t0, [1., 0, 0], True)
+    q0 = si.Quaternion(-p0, [0, 0, 1.0], rad=True)
+    q1 = si.Quaternion(-t0, [1.0, 0, 0], rad=True)
     q = q0 * q1
     rv = q.rotate(rv)
     # Remove too small numbers
     rv = np.where(np.abs(rv) < 1e-10, 0, rv)
-    v = np.linalg.inv(rv) * 2. * np.pi
+    v = np.linalg.inv(rv) * 2.0 * np.pi
     print(v)
 
     return q.rotate(v)

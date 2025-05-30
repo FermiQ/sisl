@@ -18,14 +18,14 @@ One may also plot real-space wavefunctions.
 
    DOS
    PDOS
-   velocity
-   velocity_matrix
+   COP
    berry_phase
-   berry_curvature
+   ahc
+   shc
    conductivity
    wavefunction
    spin_moment
-   spin_squared
+   spin_contamination
 
 
 Supporting classes

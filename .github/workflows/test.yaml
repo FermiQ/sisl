@@ -1,0 +1,196 @@
+---
+name: Coverage test
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CFLAGS: -Og
+
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.py'
+      - '**.pyx'
+  pull_request:
+    paths:
+      - '**.py'
+      - '**.pyx'
+  schedule:
+    # only once every 4 days
+    # We can always force run this.
+    - cron: '37 10 */4 * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Which branch to test'
+        required: false
+        default: 'main'
+      marks:
+        description: 'Which marks to test'
+        required: false
+        default: ''
+      install_args:
+        description: 'Add additional installation args'
+        required: false
+        default: '-v'
+      test_args:
+        description: 'Add additional test args'
+        required: false
+        default: '-v'
+
+jobs:
+
+  # Define a few jobs that can be runned
+  lint:
+    uses: ./.github/workflows/linter.yml
+
+  runnable:
+    if: |
+      github.event_name == 'schedule'
+      && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: '${{ github.event.inputs.branch }}'
+      - run: test -n $(git rev-list --after="1 week" --max-count=1 ${{ github.sha }})
+
+  test:
+    needs: [lint, runnable]
+    if: |
+      always() &&
+      contains(needs.lint.result, 'success') &&
+      (contains(needs.runnable.result, 'success') || contains(needs.runnable.result, 'skipped'))
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.13']
+        full-test: [true, false]
+        minimal-dep: [true, false]
+        os: [ubuntu-latest, macos-13, macos-latest]
+        exclude:
+          # only full test suite on 3.13
+          - python-version: '3.13'
+            full-test: false
+          # no minimal dependency on 3.13
+          - python-version: '3.13'
+            minimal-dep: true
+          # minimal dependency on ARM does not make sense (wheels not present)
+          - os: macos-latest
+            minimal-dep: true
+          # only run full test suite for minimal-dependency checks
+          - full-test: false
+            minimal-dep: true
+
+    steps:
+    - name: Checkout sisl
+      uses: actions/checkout@v4
+      with:
+        ref: '${{ github.event.inputs.branch }}'
+        # The files submodule is required for tests purposes
+        submodules: ${{ matrix.full-test }}
+        # the 'files' submodule uses lfs
+        lfs: ${{ matrix.full-test }}
+
+    - name: Ensure fortran
+      uses: fortran-lang/setup-fortran@v1
+      with:
+        compiler: gcc
+        version: 11
+
+    - name: Print-out commit information
+      id: info
+      run: |
+        echo "branch: ${{ github.event.inputs.branch }}"
+        echo "hash: ${{ github.sha }}"
+        echo "python-version: ${{ matrix.python-version }}"
+
+        # Put stuff in the environment
+        #
+        # Test everything including LSF files submodule?
+        if [[ "${{ matrix.full-test }}" == "true" ]]; then
+          echo "sisl_extras=test,viz" >> $GITHUB_OUTPUT
+        else
+          echo "sisl_extras=test" >> $GITHUB_OUTPUT
+        fi
+        # Test minimal versioning?
+        if [[ "${{ matrix.minimal-dep }}" == "true" ]]; then
+          echo "sisl_install_packages='numpy==1.21.*' 'scipy==1.6.*' 'xarray==0.21.*'" >> $GITHUB_OUTPUT
+        else
+          echo "sisl_install_packages=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Python installation
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Upgrade pip
+      run: |
+        python -m pip install --progress-bar=off --upgrade pip
+
+    - name: Python minimal versions
+      if: ${{ matrix.minimal-dep }}
+      run: |
+        python -m pip install --progress-bar=off -v ${{ steps.info.outputs.sisl_install_packages }}
+
+    - name: Install sisl + dependencies
+      env:
+        SKBUILD_CMAKE_ARGS: -DWITH_COVERAGE:bool=true;-DWITH_LINE_DIRECTIVES:bool=true
+        CC: gcc
+        FC: gfortran
+      run: |
+        python -m pip install --progress-bar=off \
+          ${{ github.event.inputs.install_args }} \
+          .[${{ steps.info.outputs.sisl_extras }}] \
+          ${{ steps.info.outputs.sisl_install_packages }}
+
+    - name: sisl debug info
+      run: |
+        python -c 'from sisl._debug_info import * ; print_debug_info()'
+
+    - name: sisl import test
+      run: |
+        sgeom --help
+        stoolbox atom-plot --help
+        # This should detect if the fortran sources are *correct*
+        python3 -c 'import sisl.io.siesta._siesta'
+
+    - name: sisl tests
+      env:
+        SISL_NUM_PROCS: 1
+        OMP_NUM_THREADS: 1
+        SISL_FILES_TESTS: ${{ github.workspace }}/files/tests
+      run: |
+        ls -al
+        if [[ "${{ github.event.inputs.marks }}" == "" ]]; then
+         ADD_FLAGS=""
+        else
+         ADD_FLAGS="-m ${{ github.event.inputs.marks }}"
+        fi
+        ADD_TOOLS=""
+        for tool in btd models ; do
+          ADD_TOOLS="$ADD_TOOLS sisl_toolbox.$tool"
+        done
+        for tool in atom minimizer ; do
+          ADD_TOOLS="$ADD_TOOLS sisl_toolbox.siesta.$tool"
+        done
+        for tool in poisson ; do
+          ADD_TOOLS="$ADD_TOOLS sisl_toolbox.transiesta.$tool"
+        done
+        # Try to enable code-coverage in the tests
+        coverage run -m pytest --pyargs sisl \
+          ${{ github.event.inputs.test_args }} \
+          $ADD_FLAGS $ADD_TOOLS
+        ls -al
+
+    - name: Upload code-coverage
+      if: ${{ github.event.inputs.marks == '' }}
+      uses: codecov/codecov-action@v5
+      with:
+        verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}

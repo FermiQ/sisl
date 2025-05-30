@@ -9,13 +9,3 @@ BigDFT
    :toctree: generated/
 
    asciiSileBigDFT
-
-
-.. autosummary::
-   :toctree: generated/
-   :hidden:
-
-   SileBigDFT
-   SileCDFBigDFT
-   SileBinBigDFT
-

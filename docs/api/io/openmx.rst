@@ -9,13 +9,4 @@ OpenMX
    :toctree: generated/
 
    omxSileOpenMX - input file
-
-
-.. autosummary::
-   :toctree: generated/
-   :hidden:
-
-   SileOpenMX
-   SileCDFOpenMX
-   SileBinOpenMX
-
+   mdSileOpenMX - moleculer dynamics file
